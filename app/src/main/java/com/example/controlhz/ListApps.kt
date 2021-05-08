@@ -1,11 +1,15 @@
 package com.example.controlhz
 
 import android.content.Context
+import android.content.pm.ApplicationInfo
+import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
+import android.os.AsyncTask
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -20,8 +24,9 @@ class ListApps : AppCompatActivity(), RecyclerViewAdapter.ItemClickListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_list_apps)
 
-//        val applications : ArrayList<String> = listInstalledApps()
-        val applications :  List<Map<String, Any>>  = listInstalledApps()
+//        val applications :  List<Map<String, Any>>  = listInstalledApps()
+        val applications :  MutableList<Map<String, Any>>  = mutableListOf()
+
 
         // set up the RecyclerView
         val recyclerView = findViewById<RecyclerView>(R.id.listApps)
@@ -29,6 +34,12 @@ class ListApps : AppCompatActivity(), RecyclerViewAdapter.ItemClickListener {
         adapter = RecyclerViewAdapter(this, applications, configuredApps)
         adapter!!.setClickListener(this)
         recyclerView.adapter = adapter
+
+//        adapter?.addItem(0, mapOf<String,Any>("name" to "first"))
+//        adapter?.addItem(0, mapOf<String,Any>("name" to "second"))
+//        adapter?.addItem(0, mapOf<String,Any>("name" to "third"))
+        LongOperation().execute()
+
 
         sSharedInstance = this
 
@@ -80,7 +91,7 @@ class ListApps : AppCompatActivity(), RecyclerViewAdapter.ItemClickListener {
 
                 addValueToStorage(item, configuredApps[item]!!)
             }
-            Log.d(null, configuredApps[item].toString() + "    " + configuredApps.toString())
+//            Log.d(null, configuredApps[item].toString() + "    " + configuredApps.toString())
 
             adapter!!.updateItem(position, item, configuredApps[item]!!)
         }else{
@@ -107,6 +118,84 @@ class ListApps : AppCompatActivity(), RecyclerViewAdapter.ItemClickListener {
 //        }
         return mySetting
     }
+
+    inner class LongOperation : AsyncTask<Void?, Any, String>() {
+        override fun doInBackground(vararg params: Void?): String {
+//            for (i in 0..4) {
+//                try {
+//                    Thread.sleep(1000)
+//                } catch (e: InterruptedException) {
+//                    // We were cancelled; stop sleeping!
+//                }
+//            }
+//            publishProgress("first", "hello")
+
+            val pm = packageManager
+//get a list of installed apps.
+//get a list of installed apps.
+            val packages = pm.getInstalledApplications(PackageManager.GET_META_DATA)
+
+//        val applications : ArrayList<String> = ArrayList()
+            val applications : ArrayList<Map<String, Any>> = ArrayList()
+            for (packageInfo in packages) {
+//            Log.d(TAG, "Installed package :" + packageInfo.packageName)
+//            Log.d(TAG, "Source dir : " + packageInfo.sourceDir)
+//            Log.d(TAG, "Launch Activity :" + pm.getLaunchIntentForPackage(packageInfo.packageName))
+//            Log.d(TAG, "App name :" + pm.getApplicationLabel(pm.getApplicationInfo(packageInfo.packageName, PackageManager.GET_META_DATA)))
+                if (pm.getLaunchIntentForPackage(packageInfo.packageName) != null) {
+
+                    if(adapter != null){
+//                        Log.d(null, "add item 🤨")
+
+                        publishProgress(pm,applications,packageInfo)
+                    }else{
+                        Log.d(null, "error adapter null applications")
+                    }
+                }
+            }
+
+
+
+            return "Executed"
+        }
+
+        override fun onProgressUpdate(vararg values: Any) {
+            super.onProgressUpdate(*values)
+//            adapter?.addItem(0, mapOf<String,Any>("name" to "test"))
+            var appInfo = getAppInfo(values[0] as PackageManager, values[1] as ArrayList<Map<String, Any>>, values[2] as ApplicationInfo)
+            adapter!!.addItem(appInfo[1] as Int, appInfo[0] as Map<String, Any>)
+//            Log.d(null, "added ${values[0].toString()} ${values}")
+        }
+
+        override fun onPostExecute(result: String) {
+//            val txt = findViewById<View>(R.id.output) as TextView
+//            txt.text = "Executed" // txt.setText(result);
+            // You might want to change "executed" for the returned string
+            // passed into onPostExecute(), but that is up to you
+        }
+
+
+
+    }
+
+    fun getAppInfo(pm:PackageManager, applications:ArrayList<Map<String, Any>>, packageInfo: ApplicationInfo): Array<Any> {
+        var name = pm.getApplicationLabel(pm.getApplicationInfo(packageInfo.packageName, PackageManager.GET_META_DATA))
+        var app = mapOf("name" to name, "image" to packageInfo.loadIcon(packageManager), "package" to packageInfo.packageName)
+        applications.add(app)
+        var Hz = getValueFromStorage(packageInfo.packageName)
+        if(Hz != -1) {
+            configuredApps.put(packageInfo.packageName, Hz)
+        }
+//        Log.d(null, "configured apps $configuredApps")
+
+        var sortedApps = applications.sortedWith(compareBy({ it.get("name").toString().toLowerCase() }))
+//        Log.d(null, "sorted ${sortedApps}")
+        var index = sortedApps.indexOf(app)
+
+        return arrayOf<Any>(applications[applications.size - 1], index)
+
+    }
+
 
     fun listInstalledApps(): ArrayList<Map<String, Any>> {
         val pm = packageManager
@@ -136,7 +225,14 @@ class ListApps : AppCompatActivity(), RecyclerViewAdapter.ItemClickListener {
                 if(Hz != -1) {
                     configuredApps.put(packageInfo.packageName, Hz)
                 }
-                Log.d(TAG, "configured apps $configuredApps")
+//                Log.d(TAG, "configured apps $configuredApps")
+
+                if(adapter != null){
+//                    Log.d(null, "add item 🤨")
+                    adapter!!.addItem(0, applications[applications.size -1])
+                }else{
+                    Log.d(null, "error adapter null applications")
+                }
             }
         }
         return applications

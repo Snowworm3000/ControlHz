@@ -3,6 +3,7 @@ package com.example.controlhz
 import android.R.attr.data
 import android.content.Context
 import android.graphics.drawable.Drawable
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,9 +12,9 @@ import androidx.appcompat.widget.AppCompatImageView
 import androidx.recyclerview.widget.RecyclerView
 
 
-class RecyclerViewAdapter internal constructor(context: Context?, data: List<Map<String, Any>>, configureApps: MutableMap<String, Int>) :
+class RecyclerViewAdapter internal constructor(context: Context?, data: MutableList<Map<String, Any>>, configureApps: MutableMap<String, Int>) :
     RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder>() {
-    private val mData: List<Map<String, Any>>
+    private val mData: MutableList<Map<String, Any>>
     private val mInflater: LayoutInflater
     private var mClickListener: ItemClickListener? = null
     private var mConfigureApps: MutableMap<String, Int>
@@ -74,9 +75,12 @@ class RecyclerViewAdapter internal constructor(context: Context?, data: List<Map
         mClickListener = itemClickListener
     }
 
-//    fun addItem(index:Int ){
-//
-//    }
+    fun addItem(index:Int, application:Map<String, Any>){
+        mData.add(index, application)
+//        Log.d(null, "add item $index $application")
+//        this.notifyItemInserted(index)
+        this.notifyDataSetChanged()
+    }
 
     fun updateItem(index:Int, pack:String, value:Int){
         mConfigureApps[pack] = value
