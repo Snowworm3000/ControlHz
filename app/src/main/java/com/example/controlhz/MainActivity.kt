@@ -3,13 +3,15 @@ package com.example.controlhz
 import android.content.ContentResolver
 import android.content.Intent
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
 import android.view.View
-import android.widget.Button
+import android.widget.CompoundButton
+import android.widget.Switch
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -19,9 +21,33 @@ class MainActivity : AppCompatActivity() {
         cResolver = getContentResolver();
         setContentView(R.layout.activity_main)
 
+        sSharedInstance = this
+        updateSwitch()
+        configureSwitch()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        updateSwitch()
+        Log.d(null, "resume")
+    }
+
+    fun configureSwitch(){
+        val switch = findViewById<Switch>(R.id.serviceSwitch)
+        switch.setOnCheckedChangeListener(CompoundButton.OnCheckedChangeListener { buttonView, isChecked ->
+            openSettings(buttonView)
+        })
+
+    }
+    fun updateSwitch(){
+        val switch = findViewById<Switch>(R.id.serviceSwitch)
+        switch.isChecked = getAccessibility() != null
     }
 
 
+    fun getAccessibility(): accessibilityAppForeground? {
+        return accessibilityAppForeground.getSharedInstance()
+    }
 
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     fun buttonPress(view: View) {
@@ -56,5 +82,13 @@ class MainActivity : AppCompatActivity() {
     fun listApps(v: View){
         var intent = Intent(this, ListApps::class.java)
         startActivity(intent)
+    }
+
+    companion object {
+        var sSharedInstance: MainActivity? = null
+
+        public fun getSharedInstance(): MainActivity? {
+            return sSharedInstance
+        }
     }
 }

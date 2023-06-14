@@ -51,9 +51,9 @@ class ListApps : AppCompatActivity(), RecyclerViewAdapter.ItemClickListener {
         Log.d(null, "Foreground changed $pack ${configuredApps[pack]}")
 
         if(configuredApps[pack] != null) {
-            getAccessibility().changeFramerate(configuredApps[pack]!!)
+            getAccessibility()?.changeFramerate(configuredApps[pack]!!)
         }else{
-            getAccessibility().changeFramerate(2) //Change to default value (auto)
+            getAccessibility()?.changeFramerate(2) //Change to default value (auto)
         }
 
     }
@@ -66,7 +66,7 @@ class ListApps : AppCompatActivity(), RecyclerViewAdapter.ItemClickListener {
         }
     }
 
-    fun getAccessibility(): accessibilityAppForeground {
+    fun getAccessibility(): accessibilityAppForeground? {
         return accessibilityAppForeground.getSharedInstance()
     }
 
